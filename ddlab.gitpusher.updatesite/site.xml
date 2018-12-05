@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<site>
-   <feature url="features/ddlab.gitpusher.feature_1.0.0.jar" id="ddlab.gitpusher.feature" version="1.0.0"/>
-   <category-def name="DDLAB Tornado" label="DDLAB Tornado"/>
-</site>
