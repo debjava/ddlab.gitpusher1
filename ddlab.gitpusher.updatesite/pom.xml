@@ -15,4 +15,15 @@
   <artifactId>ddlab.gitpusher</artifactId>
   <version>1.0.0</version>
  </parent>
+
+ <contributors>
+  <contributor>
+   <name>Debadatta Mishra</name>
+   <email>debadatta.mishra@gmail.com</email>
+   <organization>DDLAB Inc.</organization>
+   <roles>
+    <role>Technical Architect</role>
+   </roles>
+  </contributor>
+ </contributors>
 </project>

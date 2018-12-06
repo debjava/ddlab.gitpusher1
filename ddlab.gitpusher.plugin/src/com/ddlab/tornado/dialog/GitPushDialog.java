@@ -102,11 +102,12 @@ public class GitPushDialog extends TitleAreaDialog {
     showRepoBtn.setText(REPO_LBL_TXT);
     showRepoBtn.setFont(BOLD_FONT);
     showRepoBtn.setLayoutData(new GridData(GridData.END, SWT.CENTER, false, false));
+    showRepoBtn.setToolTipText(REPO_BTN_TOOL_TIP_TXT);;
 
     myRepoCombo = new Combo(container, SWT.READ_ONLY);
     myRepoCombo.setFont(PLAIN_TXT_FONT);
+    myRepoCombo.setToolTipText(REPO_COMBO_DECORATOR_TXT);
     CommonUtil.setLayoutData(myRepoCombo);
-    CommonUtil.setDecorator(myRepoCombo, REPO_COMBO_DECORATOR_TXT);
     addRepoBtnListener();
   }
 
@@ -148,6 +149,11 @@ public class GitPushDialog extends TitleAreaDialog {
   @Override
   protected void cancelPressed() {
     super.cancelPressed();
+  }
+  
+  @Override
+  protected boolean isResizable() {
+    return true;
   }
 
   private boolean isAccountValid() {
