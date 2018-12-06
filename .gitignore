@@ -68,7 +68,7 @@ local.properties
 build
 .gradle/
 build/
-**/*.jar
+# **/*.jar # Commented only for eclipse plugin development
 
 # Maven specific
 
