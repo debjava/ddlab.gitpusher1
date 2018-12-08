@@ -54,6 +54,12 @@
  </build>
 
  <modules>
+ 
+ 
+ <module>ddlab.gitpusher.core</module>
+ 
+ 
+ 
   <module>ddlab.gitpusher.plugin</module>
   <module>ddlab.gitpusher.feature</module>
   <module>ddlab.gitpusher.updatesite</module>
