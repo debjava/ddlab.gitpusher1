@@ -17,12 +17,17 @@ import static com.ddlab.tornado.common.CommonConstants.SHELL_IMG_64;
 import static com.ddlab.tornado.common.CommonConstants.USER_NAME_DECORATOR_TXT;
 import static com.ddlab.tornado.common.CommonConstants.USER_NAME_TEXT;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
@@ -41,7 +46,7 @@ import org.eclipse.swt.widgets.Text;
 import com.ddlab.tornado.Activator;
 import com.ddlab.tornado.common.CommonUtil;
 import com.ddlab.tornado.common.ImageUtil;
-import com.ddlab.tornado.github.GitHubUtil;
+import com.ddlab.tornado.github.RepoLoaderThread;
 
 public class GitPushDialog extends TitleAreaDialog {
 
@@ -50,6 +55,7 @@ public class GitPushDialog extends TitleAreaDialog {
   private Text passwordText = null;
   private Button showRepoBtn = null;
   private Combo myRepoCombo = null;
+  private Text readMeTxt = null;
 
   public GitPushDialog(Shell parentShell) {
     super(parentShell);
@@ -76,6 +82,7 @@ public class GitPushDialog extends TitleAreaDialog {
     createUserName(container);
     createPassword(container);
     createShowRepo(container);
+    createForReadMe(container);
 
     return dialogComposite;
   }
@@ -91,7 +98,7 @@ public class GitPushDialog extends TitleAreaDialog {
     gitActCombo.select(0);
     gitActCombo.setFont(PLAIN_TXT_FONT);
     CommonUtil.setLayoutData(gitActCombo);
-    CommonUtil.setDecorator(gitActCombo, ACT_TYPE_DECORATOR_TXT);
+    CommonUtil.setProposalDecorator(gitActCombo, ACT_TYPE_DECORATOR_TXT);
   }
 
   private void createUserName(Composite container) {
@@ -99,12 +106,12 @@ public class GitPushDialog extends TitleAreaDialog {
     userNameLabel.setText(USER_NAME_TEXT);
     userNameLabel.setFont(BOLD_FONT);
     userNameLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false));
+    CommonUtil.setRequiredDecorator(userNameLabel, USER_NAME_DECORATOR_TXT);
 
     userNameText = new Text(container, SWT.BORDER);
     userNameText.setFont(PLAIN_TXT_FONT);
     addUserNameTextListener();
     CommonUtil.setLayoutData(userNameText);
-    CommonUtil.setDecorator(userNameText, USER_NAME_DECORATOR_TXT);
   }
 
   private void createPassword(Composite container) {
@@ -112,10 +119,10 @@ public class GitPushDialog extends TitleAreaDialog {
     passwordLabel.setText(PWD_LBL_TXT);
     passwordLabel.setFont(BOLD_FONT);
     passwordLabel.setLayoutData(new GridData(GridData.END, SWT.CENTER, false, false));
+    CommonUtil.setRequiredDecorator(passwordLabel, PWD_DECORATOE_TXT);
 
     passwordText = new Text(container, SWT.PASSWORD | SWT.BORDER);
     CommonUtil.setLayoutData(passwordText);
-    CommonUtil.setDecorator(passwordText, PWD_DECORATOE_TXT);
   }
 
   private void createShowRepo(Composite container) {
@@ -124,13 +131,33 @@ public class GitPushDialog extends TitleAreaDialog {
     showRepoBtn.setFont(BOLD_FONT);
     showRepoBtn.setLayoutData(new GridData(GridData.END, SWT.CENTER, false, false));
     showRepoBtn.setToolTipText(REPO_BTN_TOOL_TIP_TXT);
-    ;
 
     myRepoCombo = new Combo(container, SWT.READ_ONLY);
     myRepoCombo.setFont(PLAIN_TXT_FONT);
     myRepoCombo.setToolTipText(REPO_COMBO_DECORATOR_TXT);
     CommonUtil.setLayoutData(myRepoCombo);
     addRepoBtnListener();
+  }
+
+  private void createForReadMe(Composite container) {
+    Label readMeLbl = new Label(container, SWT.NONE);
+    readMeLbl.setText("Enter some details for text area for ReadMe.md");
+    readMeLbl.setFont(BOLD_FONT);
+    GridData userNamegData = new GridData();
+    userNamegData.horizontalSpan = 2;
+    readMeLbl.setLayoutData(userNamegData);
+
+    readMeTxt = new Text(container, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
+    readMeTxt.setFont(PLAIN_TXT_FONT);
+
+    GridData gData = new GridData();
+    gData.heightHint = 40;
+    gData.horizontalAlignment = SWT.FILL; // GridData.FILL;
+    gData.horizontalSpan = 2;
+    readMeTxt.setLayoutData(gData);
+
+    CommonUtil.setRightSideControlDecorator(
+        readMeLbl, "This is a information to be entered in ReadMe.md");
   }
 
   private void addRepoBtnListener() {
@@ -155,28 +182,66 @@ public class GitPushDialog extends TitleAreaDialog {
 
   private void populateRepoCombo() {
     // get the list of repositories;
-    String[] repos;
-    try {
-    	 System.out.println("3333333333333------Coming here -------");
-      repos = GitHubUtil.getAllRepositories(userNameText.getText(), passwordText.getText());
-      System.out.println("444444444442------Coming here -------");
-      myRepoCombo.setItems(repos);
-      // if items are not empty
-      if (repos != null && repos.length != 0) myRepoCombo.select(0);
-    } catch (Exception e) {
-    	Status status = new Status(IStatus.ERROR, Activator.PLUGIN_ID,  e.getLocalizedMessage(), e);
-    	
-//    	String PID = Activator.PLUGIN_ID;
-//    	MultiStatus status = new MultiStatus(PID, 1, "Error 1", null);
-//    	status.add(new Status(IStatus.ERROR, PID, 1, "Error 2", null));
-//    	status.add(new Status(IStatus.ERROR, PID, 1, "Error 3", null));
-//    	status.add(new Status(IStatus.ERROR, PID, 1, "Error 4", null));
-    	
-    	
-    	ErrorDialog.openError( new Shell(), "Error", e.getMessage(), status);
-      System.out.println("=========>" + e.getMessage());
-      e.printStackTrace();
-    }
+    if (!isAccountValid()) return;
+    myRepoCombo.removeAll();
+    List<String> repoList = new ArrayList<>();
+    IRunnableWithProgress op = new RepoLoaderThread(userNameText.getText(), passwordText.getText(),myRepoCombo,repoList);
+
+    
+    
+//    Display.getDefault()
+//        .syncExec(
+//            new Runnable() {
+//              public void run() {
+//                try {
+//                  new ProgressMonitorDialog(new Shell()).run(true, true, op);
+//                } catch (InvocationTargetException | InterruptedException e) {
+//                  e.printStackTrace();
+//                }
+//              }
+//            });
+
+        try {
+          new ProgressMonitorDialog(new Shell()).run(true, true, op);
+          if( repoList.size() != 0 ) {
+          	String[] repos = repoList.toArray(new String[0]);
+          	myRepoCombo.setItems(repos);
+          	myRepoCombo.select(0);
+          }
+          
+        } catch (InvocationTargetException
+            | InterruptedException e) {
+          e.printStackTrace();
+          Status status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getLocalizedMessage(),
+        		     e);
+          ErrorDialog.openError(new Shell(), "Error", e.getMessage(), status);
+        }
+
+    //
+    //
+    //    String[] repos;
+    //    try {
+    //      repos = GitHubUtil.getAllRepositories(userNameText.getText(), passwordText.getText());
+    //      myRepoCombo.setItems(repos);
+    //      // if items are not empty
+    //      if (repos != null && repos.length != 0) myRepoCombo.select(0);
+    //    } catch (Exception e) {
+    //      Status status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getLocalizedMessage(),
+    // e);
+    //
+    //      //    	String PID = Activator.PLUGIN_ID;
+    //      //    	MultiStatus status = new MultiStatus(PID, 1, "Error 1", null);
+    //      //    	status.add(new Status(IStatus.ERROR, PID, 1, "Error 2", null));
+    //      //    	status.add(new Status(IStatus.ERROR, PID, 1, "Error 3", null));
+    //      //    	status.add(new Status(IStatus.ERROR, PID, 1, "Error 4", null));
+    //
+    //      ErrorDialog.openError(new Shell(), "Error", e.getMessage(), status);
+    //      System.out.println("=========>" + e.getMessage());
+    //      e.printStackTrace();
+    //    }
+    //
+    //
+
   }
 
   @Override
