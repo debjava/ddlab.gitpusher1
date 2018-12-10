@@ -20,4 +20,8 @@ public interface IGitHandler {
   void clone(String repoName, File dirPath) throws Exception;
 
   void update(File cloneDirPath,String message) throws Exception;
+  
+  String[] getGists() throws Exception;
+  
+  void createGist(String fileName, String fileContents,String description) throws Exception;
 }

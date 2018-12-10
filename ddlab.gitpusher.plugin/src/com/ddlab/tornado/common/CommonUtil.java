@@ -26,7 +26,8 @@ public class CommonUtil {
 
   public static void setRequiredDecorator(Control control, String message) {
     ControlDecoration decorator = getDecorator(control, message);
-    decorator.setImage(ImageUtil.ERROR_IMAGE);
+//    decorator.setImage(ImageUtil.ERROR_IMAGE);
+    decorator.setImage(ImageUtil.PROPOSAL_IMAGE);
     decorator.show();
   }
 

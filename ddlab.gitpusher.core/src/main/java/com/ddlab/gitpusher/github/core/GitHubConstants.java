@@ -15,13 +15,16 @@ public class GitHubConstants {
                     + " "+ "using DDLAB Gitpusher tool";
 
   // GITHUB Details
-  public static String GIT_API_URI = "https://api.github.com";
-  public static String REPO_API = "/user/repos"; // To get all repos, also used for creating a repo
-  public static String USER_API = "/user"; // To get user details
-  public static String SEARCH_REPO_API =
+  public static final String GIT_API_URI = "https://api.github.com";
+  public static final String REPO_API = "/user/repos"; // To get all repos, also used for creating a repo
+  public static final String USER_API = "/user"; // To get user details
+  public static final String GIST_API = "/users/{0}/gists";
+  public static final String SEARCH_REPO_API =
       "/repos/{0}/{1}"; // To search the repo /repos/<loginUser>/<repoName>
   public static String GITHUB_REPO_CLONE_URI =
       "https://github.com/{0}/{1}.git"; // "https://github.com/debjava/Hello-World.git"
+  
+  public static final String GITHUB_GET_GIST_API = GIT_API_URI+GIST_API;
 
   private static String getTempGitLocation() {
     File tempGitDir = new File(HOME_DIR + File.separator + TEMP_GIT_PATH);

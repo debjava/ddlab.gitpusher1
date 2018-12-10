@@ -1,98 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-
-   <extension
+    <extension
          point="org.eclipse.ui.commands">
-      <category
+        <category
             name="Gitpusher Category"
-            id="gitpusher1.commands.category">
-      </category>
-      
-      <command
+            id="gitpusher1.commands.category"></category>
+        <command
             name="Push to Git"
             categoryId="gitpusher1.commands.category"
-            id="gitpusher1.commands.gitPushCmd">
-      </command>
-      
-      <command
+            id="gitpusher1.commands.gitPushCmd"></command>
+        <command
             name="Create a Gist"
             categoryId="gitpusher1.commands.category"
-            id="gitpusher1.commands.gistCreateCmd">
-      </command>
-      
-   </extension>
-   
-   
-   <extension
+            id="gitpusher1.commands.gistCreateCmd"></command>
+    </extension>
+    <extension
          point="org.eclipse.ui.handlers">
-      
-      <handler
+        <handler
             commandId="gitpusher1.commands.gitPushCmd"
-            class="com.ddlab.tornado.handlers.GitPushHandler">
-      </handler>
-      
-      <handler
+            class="com.ddlab.tornado.handlers.GitPushHandler"></handler>
+        <handler
             commandId="gitpusher1.commands.gistCreateCmd"
-            class="com.ddlab.tornado.handlers.GitPushHandler">
-      </handler>
-      
-   </extension>
-   
-   <!--
+            class="com.ddlab.tornado.handlers.CreateGistHandler"></handler>
+    </extension>
+    <!--
    <extension
-         point="org.eclipse.ui.bindings">
-      <key
+         point="org.eclipse.ui.bindings"><key
             commandId="gitpusher1.commands.gitPushCmd"
             contextId="org.eclipse.ui.contexts.window"
             sequence="M1+6"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
-      </key>
-   </extension>
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"></key></extension>
    -->
-   
-   
-   
-   <extension
+    <extension
          point="org.eclipse.ui.menus">
-         
-         <menuContribution
+        <menuContribution
             locationURI="popup:org.eclipse.ui.popup.any">
-            
             <command
                   commandId="gitpusher1.commands.gitPushCmd"
-                  icon="icons/github-16.png">              
-               
-               <visibleWhen>
-                  <with  variable="activeMenuSelection" >
-                  <iterate ifEmpty="false">
-                  	<adapt type="org.eclipse.core.resources.IProject"/>
-                  </iterate>
-                  </with>
-               </visibleWhen>
-               
-               
+                  icon="icons/github-16.png">
+                <visibleWhen>
+                    <with  variable="activeMenuSelection">
+                        <count value="1"/>
+                        <iterate ifEmpty="false">
+                            <adapt type="org.eclipse.core.resources.IProject"/>
+                        </iterate>
+                    </with>
+                </visibleWhen>
             </command>
-         </menuContribution>
-         
-         <menuContribution
+        </menuContribution>
+        <menuContribution
                locationURI="popup:org.eclipse.ui.popup.any">
-               
-               <command
+            <command
                      commandId="gitpusher1.commands.gistCreateCmd"
-                     icon="icons/github-16.png">
-                     
-                     <visibleWhen>
-                  <with  variable="activeMenuSelection" >
-                  <iterate ifEmpty="false">
-                    <adapt type="org.eclipse.core.resources.IFile"/>
-                  </iterate>
-                  </with>
-               </visibleWhen>
-                     
-               </command>
-         </menuContribution>
-      
-   </extension>
-
+                     icon="icons/code-16.png">
+                <visibleWhen>
+                    <with  variable="activeMenuSelection" >
+                        <count value="1"/>
+                        <iterate ifEmpty="false">
+                            <adapt type="org.eclipse.core.resources.IFile"/>
+                        </iterate>
+                    </with>
+                </visibleWhen>
+            </command>
+        </menuContribution>
+    </extension>
 </plugin>

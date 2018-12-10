@@ -34,6 +34,10 @@ public class CommonConstants {
   public static final String REPO_BTN_TOOL_TIP_TXT = "Click to see the list of repositories";
 
   public static final String REPO_COMBO_DECORATOR_TXT = "Displays the list of repositories";
+  
+  public static final String GIST_COMBO_DECORATOR_TXT = "Displays the list of gist";
 
-  public static final String REPO_LBL_TXT = "Test and show my repositories";
+  public static final String REPO_BTN_TXT = "Test and show my repositories";
+  
+  public static final String GIST_BTN_TXT = "Test and show my gists";
 }

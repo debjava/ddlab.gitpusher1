@@ -11,7 +11,7 @@ import static com.ddlab.tornado.common.CommonConstants.PWD_DECORATOE_TXT;
 import static com.ddlab.tornado.common.CommonConstants.PWD_LBL_TXT;
 import static com.ddlab.tornado.common.CommonConstants.REPO_BTN_TOOL_TIP_TXT;
 import static com.ddlab.tornado.common.CommonConstants.REPO_COMBO_DECORATOR_TXT;
-import static com.ddlab.tornado.common.CommonConstants.REPO_LBL_TXT;
+import static com.ddlab.tornado.common.CommonConstants.REPO_BTN_TXT;
 import static com.ddlab.tornado.common.CommonConstants.SHELL_IMG_16;
 import static com.ddlab.tornado.common.CommonConstants.SHELL_IMG_64;
 import static com.ddlab.tornado.common.CommonConstants.USER_NAME_DECORATOR_TXT;
@@ -127,7 +127,7 @@ public class GitPushDialog extends TitleAreaDialog {
 
   private void createShowRepo(Composite container) {
     showRepoBtn = new Button(container, SWT.PUSH);
-    showRepoBtn.setText(REPO_LBL_TXT);
+    showRepoBtn.setText(REPO_BTN_TXT);
     showRepoBtn.setFont(BOLD_FONT);
     showRepoBtn.setLayoutData(new GridData(GridData.END, SWT.CENTER, false, false));
     showRepoBtn.setToolTipText(REPO_BTN_TOOL_TIP_TXT);

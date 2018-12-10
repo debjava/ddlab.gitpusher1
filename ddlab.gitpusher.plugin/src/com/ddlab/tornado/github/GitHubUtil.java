@@ -20,11 +20,18 @@ public class GitHubUtil {
     for (Repo repo : repos) repoList.add(repo.getName());
     String[] allRepos = repoList.toArray(new String[0]);
 
-//    gitHandler.getAllRepositories();
-    for (String repoName : allRepos) {
-      System.out.println("Repo Name : " + repoName);
-    }
-    System.out.println("2222222222------Coming here -------");
+    //    gitHandler.getAllRepositories();
+    //    for (String repoName : allRepos) {
+    //      System.out.println("Repo Name : " + repoName);
+    //    }
     return allRepos;
+  }
+
+  public static String[] getAllGists(String userName, String password) throws Exception {
+    UserAccount userAccount = new UserAccount(userName, password);
+    IGitHandler gitHandler = new GitHubHandlerImpl(userAccount);
+    String[] allGists = gitHandler.getGists();
+    for(String gistName : allGists) System.out.println("Gist Name : "+gistName);
+    return allGists;
   }
 }

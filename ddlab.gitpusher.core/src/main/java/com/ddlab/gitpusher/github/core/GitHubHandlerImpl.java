@@ -244,13 +244,57 @@ public class GitHubHandlerImpl implements IGitHandler {
     httpPost.setEntity(jsonBodyRequest);
     try {
       GitResponse gitResponse = HTTPUtil.getHttpGetOrPostResponse(httpPost);
-      IErrorResponseParser errorParser = new RepoCreateErrorResponseParser();
+      IErrorResponseParser<String, String> errorParser = new RepoCreateErrorResponseParser();
       IResponseParser<String, GitHubRepo> responseParser = new GitHubResponseParserImpl();
       GitHubRepo gitRepo =
           responseParser.getNewlyCreatedHostedRepo(gitResponse.getResponseText(), errorParser);
     } catch (GenericGitPushException e) {
       throw e;
     }
+  }
+
+  @Override
+  public String[] getGists() throws Exception {
+    String[] gists = null;
+    String uri = GITHUB_GET_GIST_API;
+    MessageFormat formatter = new MessageFormat(uri);
+    String loginUser = getUserName();
+    uri = formatter.format(new String[] {loginUser});
+    System.out.println("Now Gist URI : "+uri);
+    HttpGet httpGet = new HttpGet(uri);
+    String encodedUser =
+        HTTPUtil.getEncodedUser(userAccount.getUserName(), userAccount.getPassword());
+    httpGet.setHeader("Authorization", "Basic " + encodedUser);
+
+    try {
+      GitResponse gitResponse = HTTPUtil.getHttpGetOrPostResponse(httpGet);
+      IGistResponseParser<String, String[]> gistParser = new GitHubGistParserImpl();
+      gists = gistParser.parse(gitResponse.getResponseText());
+    } catch (GenericGitPushException e) {
+      throw e;
+    }
+    return gists;
+  }
+
+  @Override
+  public void createGist(String fileName, String fileContents, String description)
+      throws Exception {
+    String uri = GITHUB_GET_GIST_API;
+    MessageFormat formatter = new MessageFormat(uri);
+    String loginUser = getUserName();
+    uri = formatter.format(new String[] {loginUser});
+    System.out.println("Now Gist URI : "+uri);
+    HttpGet httpGet = new HttpGet(uri);
+    String encodedUser =
+        HTTPUtil.getEncodedUser(userAccount.getUserName(), userAccount.getPassword());
+    httpGet.setHeader("Authorization", "Basic " + encodedUser);
+    //    try {
+    //      GitResponse gitResponse = HTTPUtil.getHttpGetOrPostResponse(httpGet);
+    //
+    //      existsFlag = gitResponse.getStatusCode().equals("200") ? true : false;
+    //    } catch (GenericGitPushException e) {
+    //      throw e;
+    //    }
   }
 
   private static class HostedRepo {
