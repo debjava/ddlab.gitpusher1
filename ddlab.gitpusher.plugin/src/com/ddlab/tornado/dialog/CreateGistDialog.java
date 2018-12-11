@@ -1,20 +1,5 @@
 package com.ddlab.tornado.dialog;
 
-//import static com.ddlab.tornado.common.CommonConstants.ACT_TYPE_DECORATOR_TXT;
-//import static com.ddlab.tornado.common.CommonConstants.ACT_TYPE_LBL_TXT;
-//import static com.ddlab.tornado.common.CommonConstants.BOLD_FONT;
-//import static com.ddlab.tornado.common.CommonConstants.DLG_SHELL_TXT;
-//import static com.ddlab.tornado.common.CommonConstants.DLG_TITLE_TXT;
-//import static com.ddlab.tornado.common.CommonConstants.GIST_COMBO_DECORATOR_TXT;
-//import static com.ddlab.tornado.common.CommonConstants.GIT_ACCOUNTS;
-//import static com.ddlab.tornado.common.CommonConstants.PLAIN_TXT_FONT;
-//import static com.ddlab.tornado.common.CommonConstants.PWD_DECORATOE_TXT;
-//import static com.ddlab.tornado.common.CommonConstants.PWD_LBL_TXT;
-//import static com.ddlab.tornado.common.CommonConstants.REPO_BTN_TOOL_TIP_TXT;
-//import static com.ddlab.tornado.common.CommonConstants.SHELL_IMG_16;
-//import static com.ddlab.tornado.common.CommonConstants.SHELL_IMG_64;
-//import static com.ddlab.tornado.common.CommonConstants.USER_NAME_DECORATOR_TXT;
-//import static com.ddlab.tornado.common.CommonConstants.USER_NAME_TEXT;
 import static com.ddlab.tornado.common.CommonConstants.*;
 
 import java.lang.reflect.InvocationTargetException;
@@ -55,7 +40,7 @@ public class CreateGistDialog extends TitleAreaDialog {
   private Text passwordText = null;
   private Button showGistBtn = null;
   private Combo myGistCombo = null;
-  private Text readMeTxt = null;
+  private Text gistDescTxt = null;
 
   public CreateGistDialog(Shell parentShell) {
     super(parentShell);
@@ -98,7 +83,7 @@ public class CreateGistDialog extends TitleAreaDialog {
     gitActCombo.select(0);
     gitActCombo.setFont(PLAIN_TXT_FONT);
     CommonUtil.setLayoutData(gitActCombo);
-//    CommonUtil.setProposalDecorator(gitActCombo, ACT_TYPE_DECORATOR_TXT);
+    //    CommonUtil.setProposalDecorator(gitActCombo, ACT_TYPE_DECORATOR_TXT);
   }
 
   private void createUserName(Composite container) {
@@ -122,6 +107,7 @@ public class CreateGistDialog extends TitleAreaDialog {
     CommonUtil.setRequiredDecorator(passwordLabel, PWD_DECORATOE_TXT);
 
     passwordText = new Text(container, SWT.PASSWORD | SWT.BORDER);
+    addPwdTextListener();
     CommonUtil.setLayoutData(passwordText);
   }
 
@@ -140,24 +126,34 @@ public class CreateGistDialog extends TitleAreaDialog {
   }
 
   private void createGistDescription(Composite container) {
-    Label readMeLbl = new Label(container, SWT.NONE);
-    readMeLbl.setText("Enter some details for text area for Gist/Snippets");
-    readMeLbl.setFont(BOLD_FONT);
+    Label gistDescLbl = new Label(container, SWT.NONE);
+    gistDescLbl.setText(GIST_LBL_TXT);
+    gistDescLbl.setFont(BOLD_FONT);
     GridData userNamegData = new GridData();
     userNamegData.horizontalSpan = 2;
-    readMeLbl.setLayoutData(userNamegData);
+    gistDescLbl.setLayoutData(userNamegData);
 
-    readMeTxt = new Text(container, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
-    readMeTxt.setFont(PLAIN_TXT_FONT);
+    gistDescTxt = new Text(container, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
+    gistDescTxt.setFont(PLAIN_TXT_FONT);
+    addGistTextListener();
 
     GridData gData = new GridData();
     gData.heightHint = 40;
     gData.horizontalAlignment = SWT.FILL; // GridData.FILL;
     gData.horizontalSpan = 2;
-    readMeTxt.setLayoutData(gData);
+    gistDescTxt.setLayoutData(gData);
 
-    CommonUtil.setRightSideControlDecorator(
-        readMeLbl, "This is a information to be entered in ReadMe.md");
+    CommonUtil.setRightSideControlDecorator(gistDescLbl, GIST_LBL_INFO_TXT);
+  }
+
+  private void addGistTextListener() {
+    gistDescTxt.addKeyListener(
+        new KeyAdapter() {
+          @Override
+          public void keyPressed(KeyEvent e) {
+            setMessage("");
+          }
+        });
   }
 
   private void addRepoBtnListener() {
@@ -172,6 +168,16 @@ public class CreateGistDialog extends TitleAreaDialog {
 
   private void addUserNameTextListener() {
     userNameText.addKeyListener(
+        new KeyAdapter() {
+          @Override
+          public void keyPressed(KeyEvent e) {
+            setMessage("");
+          }
+        });
+  }
+
+  private void addPwdTextListener() {
+    passwordText.addKeyListener(
         new KeyAdapter() {
           @Override
           public void keyPressed(KeyEvent e) {
@@ -205,7 +211,7 @@ public class CreateGistDialog extends TitleAreaDialog {
 
   @Override
   protected void okPressed() {
-    if (isAccountValid()) {
+    if (isAccountValid() && isDescValid()) {
       // Perform the operation
     }
     //    super.okPressed();
@@ -223,10 +229,20 @@ public class CreateGistDialog extends TitleAreaDialog {
 
   private boolean isAccountValid() {
     boolean isValidFlag = false;
-    if (userNameText.getText().isEmpty())
-      setMessage("User name cannot be empty", IMessageProvider.ERROR);
+    if (userNameText.getText().isEmpty()) setMessage(UNAME_NOT_EMPTY_TXT, IMessageProvider.ERROR);
     else if (passwordText.getText().isEmpty())
-      setMessage("Password cannot be empty", IMessageProvider.ERROR);
+      setMessage(PWD_NOT_EMPTY_TXT, IMessageProvider.ERROR);
+    else {
+      isValidFlag = true;
+      setMessage("");
+    }
+    return isValidFlag;
+  }
+
+  private boolean isDescValid() {
+    boolean isValidFlag = false;
+    if (gistDescTxt.getText().trim().isEmpty())
+      setMessage(GIST_NOT_EMPTY_TXT, IMessageProvider.ERROR);
     else {
       isValidFlag = true;
       setMessage("");

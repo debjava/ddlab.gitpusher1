@@ -1,5 +1,20 @@
 package com.ddlab.tornado.dialog;
 
+// import static com.ddlab.tornado.common.CommonConstants.ACT_TYPE_DECORATOR_TXT;
+// import static com.ddlab.tornado.common.CommonConstants.ACT_TYPE_LBL_TXT;
+// import static com.ddlab.tornado.common.CommonConstants.BOLD_FONT;
+// import static com.ddlab.tornado.common.CommonConstants.DLG_SHELL_TXT;
+// import static com.ddlab.tornado.common.CommonConstants.DLG_TITLE_TXT;
+// import static com.ddlab.tornado.common.CommonConstants.GIT_ACCOUNTS;
+// import static com.ddlab.tornado.common.CommonConstants.PLAIN_TXT_FONT;
+// import static com.ddlab.tornado.common.CommonConstants.PWD_DECORATOE_TXT;
+// import static com.ddlab.tornado.common.CommonConstants.PWD_LBL_TXT;
+// import static com.ddlab.tornado.common.CommonConstants.REPO_BTN_TOOL_TIP_TXT;
+// import static com.ddlab.tornado.common.CommonConstants.REPO_COMBO_DECORATOR_TXT;
+// import static com.ddlab.tornado.common.CommonConstants.REPO_BTN_TXT;
+// import static com.ddlab.tornado.common.CommonConstants.SHELL_IMG_16;
+// import static com.ddlab.tornado.common.CommonConstants.SHELL_IMG_64;
+// import static com.ddlab.tornado.common.CommonConstants.USER_NAME_DECORATOR_TXT;
 import static com.ddlab.tornado.common.CommonConstants.ACT_TYPE_DECORATOR_TXT;
 import static com.ddlab.tornado.common.CommonConstants.ACT_TYPE_LBL_TXT;
 import static com.ddlab.tornado.common.CommonConstants.BOLD_FONT;
@@ -9,20 +24,32 @@ import static com.ddlab.tornado.common.CommonConstants.GIT_ACCOUNTS;
 import static com.ddlab.tornado.common.CommonConstants.PLAIN_TXT_FONT;
 import static com.ddlab.tornado.common.CommonConstants.PWD_DECORATOE_TXT;
 import static com.ddlab.tornado.common.CommonConstants.PWD_LBL_TXT;
+import static com.ddlab.tornado.common.CommonConstants.PWD_NOT_EMPTY_TXT;
+import static com.ddlab.tornado.common.CommonConstants.READ_ME_DECO_TXT;
+import static com.ddlab.tornado.common.CommonConstants.READ_ME_INFO_TXT;
 import static com.ddlab.tornado.common.CommonConstants.REPO_BTN_TOOL_TIP_TXT;
-import static com.ddlab.tornado.common.CommonConstants.REPO_COMBO_DECORATOR_TXT;
 import static com.ddlab.tornado.common.CommonConstants.REPO_BTN_TXT;
+import static com.ddlab.tornado.common.CommonConstants.REPO_COMBO_DECORATOR_TXT;
 import static com.ddlab.tornado.common.CommonConstants.SHELL_IMG_16;
 import static com.ddlab.tornado.common.CommonConstants.SHELL_IMG_64;
+import static com.ddlab.tornado.common.CommonConstants.UNAME_NOT_EMPTY_TXT;
 import static com.ddlab.tornado.common.CommonConstants.USER_NAME_DECORATOR_TXT;
 import static com.ddlab.tornado.common.CommonConstants.USER_NAME_TEXT;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
@@ -42,7 +69,12 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.internal.WorkbenchPlugin;
 
+import com.ddlab.generator.IGitIgnoreGen;
+import com.ddlab.generator.IReadMeGen;
+import com.ddlab.generator.gitignore.GitIgnoreGenerator;
+import com.ddlab.generator.readme.ReadMeGenerator;
 import com.ddlab.tornado.Activator;
 import com.ddlab.tornado.common.CommonUtil;
 import com.ddlab.tornado.common.ImageUtil;
@@ -56,9 +88,11 @@ public class GitPushDialog extends TitleAreaDialog {
   private Button showRepoBtn = null;
   private Combo myRepoCombo = null;
   private Text readMeTxt = null;
+  private File selectedFile;
 
-  public GitPushDialog(Shell parentShell) {
+  public GitPushDialog(Shell parentShell, File selectedFile) {
     super(parentShell);
+    this.selectedFile = selectedFile;
   }
 
   @Override
@@ -122,6 +156,7 @@ public class GitPushDialog extends TitleAreaDialog {
     CommonUtil.setRequiredDecorator(passwordLabel, PWD_DECORATOE_TXT);
 
     passwordText = new Text(container, SWT.PASSWORD | SWT.BORDER);
+    addPwdTextListener();
     CommonUtil.setLayoutData(passwordText);
   }
 
@@ -141,7 +176,7 @@ public class GitPushDialog extends TitleAreaDialog {
 
   private void createForReadMe(Composite container) {
     Label readMeLbl = new Label(container, SWT.NONE);
-    readMeLbl.setText("Enter some details for text area for ReadMe.md");
+    readMeLbl.setText(READ_ME_INFO_TXT);
     readMeLbl.setFont(BOLD_FONT);
     GridData userNamegData = new GridData();
     userNamegData.horizontalSpan = 2;
@@ -156,8 +191,7 @@ public class GitPushDialog extends TitleAreaDialog {
     gData.horizontalSpan = 2;
     readMeTxt.setLayoutData(gData);
 
-    CommonUtil.setRightSideControlDecorator(
-        readMeLbl, "This is a information to be entered in ReadMe.md");
+    CommonUtil.setRightSideControlDecorator(readMeLbl, READ_ME_DECO_TXT);
   }
 
   private void addRepoBtnListener() {
@@ -180,42 +214,49 @@ public class GitPushDialog extends TitleAreaDialog {
         });
   }
 
+  private void addPwdTextListener() {
+    passwordText.addKeyListener(
+        new KeyAdapter() {
+          @Override
+          public void keyPressed(KeyEvent e) {
+            setMessage("");
+          }
+        });
+  }
+
   private void populateRepoCombo() {
     // get the list of repositories;
     if (!isAccountValid()) return;
     myRepoCombo.removeAll();
     List<String> repoList = new ArrayList<>();
-    IRunnableWithProgress op = new RepoLoaderThread(userNameText.getText(), passwordText.getText(),myRepoCombo,repoList);
+    IRunnableWithProgress op =
+        new RepoLoaderThread(userNameText.getText(), passwordText.getText(), myRepoCombo, repoList);
 
-    
-    
-//    Display.getDefault()
-//        .syncExec(
-//            new Runnable() {
-//              public void run() {
-//                try {
-//                  new ProgressMonitorDialog(new Shell()).run(true, true, op);
-//                } catch (InvocationTargetException | InterruptedException e) {
-//                  e.printStackTrace();
-//                }
-//              }
-//            });
+    //    Display.getDefault()
+    //        .syncExec(
+    //            new Runnable() {
+    //              public void run() {
+    //                try {
+    //                  new ProgressMonitorDialog(new Shell()).run(true, true, op);
+    //                } catch (InvocationTargetException | InterruptedException e) {
+    //                  e.printStackTrace();
+    //                }
+    //              }
+    //            });
 
-        try {
-          new ProgressMonitorDialog(new Shell()).run(true, true, op);
-          if( repoList.size() != 0 ) {
-          	String[] repos = repoList.toArray(new String[0]);
-          	myRepoCombo.setItems(repos);
-          	myRepoCombo.select(0);
-          }
-          
-        } catch (InvocationTargetException
-            | InterruptedException e) {
-          e.printStackTrace();
-          Status status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getLocalizedMessage(),
-        		     e);
-          ErrorDialog.openError(new Shell(), "Error", e.getMessage(), status);
-        }
+    try {
+      new ProgressMonitorDialog(new Shell()).run(true, true, op);
+      if (repoList.size() != 0) {
+        String[] repos = repoList.toArray(new String[0]);
+        myRepoCombo.setItems(repos);
+        myRepoCombo.select(0);
+      }
+
+    } catch (InvocationTargetException | InterruptedException e) {
+      e.printStackTrace();
+      Status status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getLocalizedMessage(), e);
+      ErrorDialog.openError(new Shell(), "Error", e.getMessage(), status);
+    }
 
     //
     //
@@ -248,8 +289,73 @@ public class GitPushDialog extends TitleAreaDialog {
   protected void okPressed() {
     if (isAccountValid()) {
       // Perform the operation
+    	 WorkbenchPlugin.getDefault().getPreferenceStore().setValue("RUN_IN_BACKGROUND", false);
+    	runInBackgroundProgressService();
+      generateGitIgnoreFile();
+      generateReadMeFile();
+      close();
     }
     //    super.okPressed();
+  }
+  
+  private void runInBackgroundProgressService() {
+	    Job job =
+	        new Job("Initiating a critical service") {
+
+	          @Override
+	          protected IStatus run(IProgressMonitor monitor) {
+	            monitor.beginTask("Initiating critical service in background", 100);
+	            // execute the task ...
+	            
+	            try {
+	            	for( int i = 0 ; i < 10; i++) {
+	            		TimeUnit.SECONDS.sleep(1);
+	            		monitor.setTaskName("Completed task "+i+"of 10");
+	            		monitor.worked(i*10);
+	            	}
+	            }
+	            catch(Exception e) {
+	            	e.printStackTrace();
+	            }
+	            monitor.done();
+
+
+	            monitor.done();
+	            return Status.OK_STATUS;
+	          }
+	        };
+	    job.schedule();
+	    //		job.setUser(true);
+
+	  }
+
+  private void generateReadMeFile() {
+    IReadMeGen readMeGen = new ReadMeGenerator();
+    String projectName = selectedFile.getName();
+    String description =
+        (readMeTxt.getText() == null || readMeTxt.getText().trim().isEmpty())
+            ? "To be updated later"
+            : readMeTxt.getText();
+    String readMeContents = readMeGen.generateReadMeMdContents(projectName, description, null);
+    Path readMePath = Paths.get(selectedFile.getAbsolutePath() + File.separator + "README.md");
+    try {
+      if (Files.exists(readMePath)) return;
+      Files.write(readMePath, readMeContents.getBytes());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void generateGitIgnoreFile() {
+    IGitIgnoreGen gitIgnoreGenerator = new GitIgnoreGenerator();
+    String gitIgnoreContents = gitIgnoreGenerator.generateGitIgnoreContents();
+    Path gitIgnorePath = Paths.get(selectedFile.getAbsolutePath() + File.separator + ".gitignore");
+    try {
+      if (Files.exists(gitIgnorePath)) return;
+      Files.write(gitIgnorePath, gitIgnoreContents.getBytes());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   @Override
@@ -264,10 +370,9 @@ public class GitPushDialog extends TitleAreaDialog {
 
   private boolean isAccountValid() {
     boolean isValidFlag = false;
-    if (userNameText.getText().isEmpty())
-      setMessage("User name cannot be empty", IMessageProvider.ERROR);
+    if (userNameText.getText().isEmpty()) setMessage(UNAME_NOT_EMPTY_TXT, IMessageProvider.ERROR);
     else if (passwordText.getText().isEmpty())
-      setMessage("Password cannot be empty", IMessageProvider.ERROR);
+      setMessage(PWD_NOT_EMPTY_TXT, IMessageProvider.ERROR);
     else {
       isValidFlag = true;
       setMessage("");

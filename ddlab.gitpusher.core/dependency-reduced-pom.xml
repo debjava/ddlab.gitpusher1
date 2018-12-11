@@ -16,7 +16,7 @@
             <fileset>
               <directory>${plugin.lib.dir}</directory>
               <includes>
-                <include>**/*.jar</include>
+                <include>${project.artifactId}-${project.version}.jar</include>
               </includes>
               <followSymlinks>false</followSymlinks>
             </fileset>
