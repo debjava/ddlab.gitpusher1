@@ -52,6 +52,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -66,9 +67,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.WorkbenchPlugin;
 
 import com.ddlab.generator.IGitIgnoreGen;
@@ -290,43 +293,99 @@ public class GitPushDialog extends TitleAreaDialog {
     if (isAccountValid()) {
       // Perform the operation
     	 WorkbenchPlugin.getDefault().getPreferenceStore().setValue("RUN_IN_BACKGROUND", false);
-    	runInBackgroundProgressService();
+//    	runInBackgroundProgressService();
+    	
+    	show13();
+    	
+//    	MessageDialog.openInformation(new Shell(), "Done", "All Done Paa");
+    	
       generateGitIgnoreFile();
       generateReadMeFile();
       close();
+      
+      
+      
     }
     //    super.okPressed();
   }
   
-  private void runInBackgroundProgressService() {
+//  private void runInBackgroundProgressService() {
+//	    Job job =
+//	        new Job("Initiating a critical service for "+selectedFile.getName()) {
+//
+//	          @Override
+//	          protected IStatus run(IProgressMonitor monitor) {
+//	            monitor.beginTask("Mission critical App for "+selectedFile.getName(), 10);
+//	            // execute the task ...
+//	            
+//	            try {
+//	            	for( int i = 0 ; i < 10; i++) {
+//	            		TimeUnit.SECONDS.sleep(3);
+//	            		monitor.setTaskName("Completed task "+i+"of 10");
+////	            		monitor.worked(i*10);
+//	            		monitor.worked(i);
+//	            	}
+//	            	MessageDialog.openInformation(new Shell(), "Done", "All Done Paa");
+//	            }
+//	            catch(Exception e) {
+//	            	e.printStackTrace();
+//	            }
+//	            monitor.done();
+//	            return Status.OK_STATUS;
+//	          }
+//	        };
+//	    job.schedule();
+//	    //		job.setUser(true);
+//
+//	  }
+  
+  void show13() {
+
+	    //	  WorkbenchPlugin.getDefault().getPreferenceStore().setValue("RUN_IN_BACKGROUND", false);
+	    // https://www.eclipse.org/forums/index.php/t/262592/
+
 	    Job job =
-	        new Job("Initiating a critical service") {
+	        new Job("Progress Information for "+selectedFile.getName()) {
 
 	          @Override
 	          protected IStatus run(IProgressMonitor monitor) {
-	            monitor.beginTask("Initiating critical service in background", 100);
-	            // execute the task ...
+	            monitor.beginTask("Validation in Progress fro "+selectedFile.getName(), 10);
+	            for (int i = 0; i < 10; i++) {
+	              if (monitor.isCanceled()) {
+	                return Status.CANCEL_STATUS;
+	              }
+
+	              monitor.subTask("Performing validation " + (i + 1) + " of " + "10" + "...");
+
+	              try {
+//	                Thread.sleep(100);
+	            	  TimeUnit.SECONDS.sleep(2);
+	              } catch (InterruptedException e) {
+
+	                e.printStackTrace();
+	              }
+	              monitor.worked(1);
+	            }
+	            monitor.done();
 	            
-	            try {
-	            	for( int i = 0 ; i < 10; i++) {
-	            		TimeUnit.SECONDS.sleep(1);
-	            		monitor.setTaskName("Completed task "+i+"of 10");
-	            		monitor.worked(i*10);
-	            	}
+	            Display.getDefault().syncExec( () -> {
+	            	System.out.println( ); 
+	            	MessageDialog.openInformation(new Shell(), "Done", "All Done Paa");
 	            }
-	            catch(Exception e) {
-	            	e.printStackTrace();
-	            }
-	            monitor.done();
-
-
-	            monitor.done();
+	            );
+	            
+	            
 	            return Status.OK_STATUS;
 	          }
 	        };
-	    job.schedule();
-	    //		job.setUser(true);
 
+	    //      PlatformUI.getWorkbench().getProgressService().showInDialog(new Shell(), job);
+
+	    //      PlatformUI.getWorkbench().getProgressService().showInDialog(getSite().getShell(), job);
+
+	    job.setUser(true);
+	    job.schedule();
+	    PlatformUI.getWorkbench().getProgressService().showInDialog(getShell(), job);
 	  }
 
   private void generateReadMeFile() {
